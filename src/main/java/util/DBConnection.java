@@ -29,7 +29,17 @@ public class DBConnection {
     
     public static Connection getConnection() {
         try {
-            Connection conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            Connection conn = null;
+            String dbUrl = System.getenv("JDBC_DATABASE_URL");
+            
+            if (dbUrl != null && !dbUrl.isEmpty()) {
+                // Use Heroku environment variable
+                conn = DriverManager.getConnection(dbUrl);
+            } else {
+                // Fallback to local configuration
+                conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            }
+            
             if (conn != null) {
                 conn.setAutoCommit(true);
             }
