@@ -2,6 +2,7 @@ package dao;
 
 import model.Photographer;
 import util.DBConnection;
+import util.PasswordUtil;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
