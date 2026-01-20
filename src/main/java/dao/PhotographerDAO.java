@@ -16,34 +16,52 @@ public class PhotographerDAO {
     public Photographer login(String email, String password) {
         String sql = "SELECT * FROM photographer WHERE pgemail = ? AND pgstatus = 'active'";
         
+        System.out.println("LOGIN ATTEMPT: email=" + email);
+        
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            if (conn == null) {
+                System.out.println("LOGIN ERROR: Database connection is null");
+                return null;
+            }
             
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
             
             if (rs.next()) {
                 String storedPassword = rs.getString("pgpass");
+                System.out.println("LOGIN: Found user, stored password length=" + (storedPassword != null ? storedPassword.length() : "null"));
+                System.out.println("LOGIN: Stored password starts with: " + (storedPassword != null && storedPassword.length() > 10 ? storedPassword.substring(0, 10) : storedPassword));
+                
                 boolean passwordMatch = false;
                 
                 // Check if stored password is BCrypt hash (starts with $2a$ or $2b$)
                 if (storedPassword != null && (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$"))) {
                     // Verify using BCrypt
+                    System.out.println("LOGIN: Using BCrypt verification");
                     passwordMatch = PasswordUtil.verifyPassword(password, storedPassword);
                 } else {
                     // Plain text comparison (for migration - should be removed later)
+                    System.out.println("LOGIN: Using plain text comparison");
                     passwordMatch = password.equals(storedPassword);
                 }
+                
+                System.out.println("LOGIN: Password match = " + passwordMatch);
                 
                 if (passwordMatch) {
                     return mapResultSet(rs);
                 }
+            } else {
+                System.out.println("LOGIN: No user found with email: " + email);
             }
         } catch (SQLException e) {
+            System.out.println("LOGIN ERROR: " + e.getMessage());
             e.printStackTrace();
         }
         return null;
     }
+
     
     /**
      * Get all photographers
